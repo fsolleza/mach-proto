@@ -1,5 +1,5 @@
 syntax = "proto3";
-option go_package = "./main";
+option go_package = "github.com/fsolleza/mach-proto/golang";
 
 package mach_rpc;
 
