@@ -5,11 +5,12 @@ package mach_rpc;
 
 // The definition for serving global state
 service TsdbService {
-  rpc AddSeries(AddSeriesRequest) returns (AddSeriesResponse) {}
+  //rpc AddSeries(AddSeriesRequest) returns (AddSeriesResponse) {}
   rpc Echo(EchoRequest) returns (EchoResponse) {}
-  rpc Map(MapRequest) returns (MapResponse) {}
+  //rpc Map(MapRequest) returns (MapResponse) {}
   rpc EchoStream(stream EchoRequest) returns (stream EchoResponse) {}
-  rpc MapStream(stream MapRequest) returns (stream MapResponse) {}
+  rpc PushStream(stream PushRequest) returns (stream PushResponse) {}
+  //rpc MapStream(stream MapRequest) returns (stream MapResponse) {}
 }
 
 message EchoRequest {
@@ -52,23 +53,34 @@ message GetSeriesReferenceResponse {
 }
 
 message Value {
-  oneof PbType {
+  oneof ValueType {
     double f64 = 2;
     string str = 3;
   }
 }
 
 message Sample {
+  uint64 id = 1;
   uint64 timestamp = 2;
   repeated Value values = 3;
 }
 
+message Samples {
+  map<string, string> tags = 1;
+  repeated Sample samples = 2;
+}
+
 message PushRequest {
-  map<uint64, Sample> samples = 1;
+  repeated Samples samples = 1;
+}
+
+message SampleResult {
+  uint64 id = 1;
+  bool result = 2;
 }
 
 message PushResponse {
-  map<uint64, bool> results = 1;
+  repeated SampleResult responses = 1;
 }
 
 // The definition for serving global state
