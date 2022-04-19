@@ -21,36 +21,35 @@ message EchoResponse {
   string msg = 1;
 }
 
-message MapRequest {
-  map<uint64, uint64> samples = 1;
-}
-
-message MapResponse {
-  map<uint64, bool> samples = 1;
-}
-
-message AddSeriesRequest {
-  enum ValueType {
-      U64 = 0;
-      F64 = 1;
-      Bytes = 2;
-  }
-  repeated ValueType types = 1;
-  map<string, string> tags = 2;
-}
-
-message AddSeriesResponse {
-  string writer_address = 1;
-  uint64 series_id = 2;
-}
-
-message GetSeriesReferenceRequest {
-  uint64 series_id = 1;
-}
-
-message GetSeriesReferenceResponse {
-  uint64 series_reference = 1;
-}
+//message MapRequest {
+//  map<uint64, uint64> samples = 1;
+//}
+//
+//message MapResponse {
+//  map<uint64, bool> samples = 1;
+//}
+//message AddSeriesRequest {
+//  enum ValueType {
+//      U64 = 0;
+//      F64 = 1;
+//      Bytes = 2;
+//  }
+//  repeated ValueType types = 1;
+//  map<string, string> tags = 2;
+//}
+//
+//message AddSeriesResponse {
+//  string writer_address = 1;
+//  uint64 series_id = 2;
+//}
+//
+//message GetSeriesReferenceRequest {
+//  uint64 series_id = 1;
+//}
+//
+//message GetSeriesReferenceResponse {
+//  uint64 series_reference = 1;
+//}
 
 message Value {
   oneof ValueType {
@@ -84,13 +83,13 @@ message PushResponse {
 }
 
 // The definition for serving global state
-service WriterService {
-  rpc Echo(EchoRequest) returns (EchoResponse) {}
-  rpc GetSeriesReference(GetSeriesReferenceRequest) returns (GetSeriesReferenceResponse) {}
-  rpc MapStream(stream MapRequest) returns (stream MapResponse) {}
-  rpc PushStream(stream PushRequest) returns (stream PushResponse) {}
-  rpc Push(PushRequest) returns (PushResponse) {}
-}
+//service WriterService {
+//  rpc Echo(EchoRequest) returns (EchoResponse) {}
+//  rpc GetSeriesReference(GetSeriesReferenceRequest) returns (GetSeriesReferenceResponse) {}
+//  rpc MapStream(stream MapRequest) returns (stream MapResponse) {}
+//  rpc PushStream(stream PushRequest) returns (stream PushResponse) {}
+//  rpc Push(PushRequest) returns (PushResponse) {}
+//}
 
 message ReadSeriesRequest {
     uint64 series_id = 1;

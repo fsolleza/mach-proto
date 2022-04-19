@@ -18,11 +18,11 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type TsdbServiceClient interface {
-	AddSeries(ctx context.Context, in *AddSeriesRequest, opts ...grpc.CallOption) (*AddSeriesResponse, error)
+	//rpc AddSeries(AddSeriesRequest) returns (AddSeriesResponse) {}
 	Echo(ctx context.Context, in *EchoRequest, opts ...grpc.CallOption) (*EchoResponse, error)
-	Map(ctx context.Context, in *MapRequest, opts ...grpc.CallOption) (*MapResponse, error)
+	//rpc Map(MapRequest) returns (MapResponse) {}
 	EchoStream(ctx context.Context, opts ...grpc.CallOption) (TsdbService_EchoStreamClient, error)
-	MapStream(ctx context.Context, opts ...grpc.CallOption) (TsdbService_MapStreamClient, error)
+	PushStream(ctx context.Context, opts ...grpc.CallOption) (TsdbService_PushStreamClient, error)
 }
 
 type tsdbServiceClient struct {
@@ -33,27 +33,9 @@ func NewTsdbServiceClient(cc grpc.ClientConnInterface) TsdbServiceClient {
 	return &tsdbServiceClient{cc}
 }
 
-func (c *tsdbServiceClient) AddSeries(ctx context.Context, in *AddSeriesRequest, opts ...grpc.CallOption) (*AddSeriesResponse, error) {
-	out := new(AddSeriesResponse)
-	err := c.cc.Invoke(ctx, "/mach_rpc.TsdbService/AddSeries", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *tsdbServiceClient) Echo(ctx context.Context, in *EchoRequest, opts ...grpc.CallOption) (*EchoResponse, error) {
 	out := new(EchoResponse)
 	err := c.cc.Invoke(ctx, "/mach_rpc.TsdbService/Echo", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *tsdbServiceClient) Map(ctx context.Context, in *MapRequest, opts ...grpc.CallOption) (*MapResponse, error) {
-	out := new(MapResponse)
-	err := c.cc.Invoke(ctx, "/mach_rpc.TsdbService/Map", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -91,31 +73,31 @@ func (x *tsdbServiceEchoStreamClient) Recv() (*EchoResponse, error) {
 	return m, nil
 }
 
-func (c *tsdbServiceClient) MapStream(ctx context.Context, opts ...grpc.CallOption) (TsdbService_MapStreamClient, error) {
-	stream, err := c.cc.NewStream(ctx, &TsdbService_ServiceDesc.Streams[1], "/mach_rpc.TsdbService/MapStream", opts...)
+func (c *tsdbServiceClient) PushStream(ctx context.Context, opts ...grpc.CallOption) (TsdbService_PushStreamClient, error) {
+	stream, err := c.cc.NewStream(ctx, &TsdbService_ServiceDesc.Streams[1], "/mach_rpc.TsdbService/PushStream", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &tsdbServiceMapStreamClient{stream}
+	x := &tsdbServicePushStreamClient{stream}
 	return x, nil
 }
 
-type TsdbService_MapStreamClient interface {
-	Send(*MapRequest) error
-	Recv() (*MapResponse, error)
+type TsdbService_PushStreamClient interface {
+	Send(*PushRequest) error
+	Recv() (*PushResponse, error)
 	grpc.ClientStream
 }
 
-type tsdbServiceMapStreamClient struct {
+type tsdbServicePushStreamClient struct {
 	grpc.ClientStream
 }
 
-func (x *tsdbServiceMapStreamClient) Send(m *MapRequest) error {
+func (x *tsdbServicePushStreamClient) Send(m *PushRequest) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *tsdbServiceMapStreamClient) Recv() (*MapResponse, error) {
-	m := new(MapResponse)
+func (x *tsdbServicePushStreamClient) Recv() (*PushResponse, error) {
+	m := new(PushResponse)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
@@ -126,11 +108,11 @@ func (x *tsdbServiceMapStreamClient) Recv() (*MapResponse, error) {
 // All implementations must embed UnimplementedTsdbServiceServer
 // for forward compatibility
 type TsdbServiceServer interface {
-	AddSeries(context.Context, *AddSeriesRequest) (*AddSeriesResponse, error)
+	//rpc AddSeries(AddSeriesRequest) returns (AddSeriesResponse) {}
 	Echo(context.Context, *EchoRequest) (*EchoResponse, error)
-	Map(context.Context, *MapRequest) (*MapResponse, error)
+	//rpc Map(MapRequest) returns (MapResponse) {}
 	EchoStream(TsdbService_EchoStreamServer) error
-	MapStream(TsdbService_MapStreamServer) error
+	PushStream(TsdbService_PushStreamServer) error
 	mustEmbedUnimplementedTsdbServiceServer()
 }
 
@@ -138,20 +120,14 @@ type TsdbServiceServer interface {
 type UnimplementedTsdbServiceServer struct {
 }
 
-func (UnimplementedTsdbServiceServer) AddSeries(context.Context, *AddSeriesRequest) (*AddSeriesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AddSeries not implemented")
-}
 func (UnimplementedTsdbServiceServer) Echo(context.Context, *EchoRequest) (*EchoResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Echo not implemented")
-}
-func (UnimplementedTsdbServiceServer) Map(context.Context, *MapRequest) (*MapResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Map not implemented")
 }
 func (UnimplementedTsdbServiceServer) EchoStream(TsdbService_EchoStreamServer) error {
 	return status.Errorf(codes.Unimplemented, "method EchoStream not implemented")
 }
-func (UnimplementedTsdbServiceServer) MapStream(TsdbService_MapStreamServer) error {
-	return status.Errorf(codes.Unimplemented, "method MapStream not implemented")
+func (UnimplementedTsdbServiceServer) PushStream(TsdbService_PushStreamServer) error {
+	return status.Errorf(codes.Unimplemented, "method PushStream not implemented")
 }
 func (UnimplementedTsdbServiceServer) mustEmbedUnimplementedTsdbServiceServer() {}
 
@@ -164,24 +140,6 @@ type UnsafeTsdbServiceServer interface {
 
 func RegisterTsdbServiceServer(s grpc.ServiceRegistrar, srv TsdbServiceServer) {
 	s.RegisterService(&TsdbService_ServiceDesc, srv)
-}
-
-func _TsdbService_AddSeries_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AddSeriesRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(TsdbServiceServer).AddSeries(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/mach_rpc.TsdbService/AddSeries",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TsdbServiceServer).AddSeries(ctx, req.(*AddSeriesRequest))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _TsdbService_Echo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -198,24 +156,6 @@ func _TsdbService_Echo_Handler(srv interface{}, ctx context.Context, dec func(in
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(TsdbServiceServer).Echo(ctx, req.(*EchoRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _TsdbService_Map_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MapRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(TsdbServiceServer).Map(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/mach_rpc.TsdbService/Map",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TsdbServiceServer).Map(ctx, req.(*MapRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -246,26 +186,26 @@ func (x *tsdbServiceEchoStreamServer) Recv() (*EchoRequest, error) {
 	return m, nil
 }
 
-func _TsdbService_MapStream_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(TsdbServiceServer).MapStream(&tsdbServiceMapStreamServer{stream})
+func _TsdbService_PushStream_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(TsdbServiceServer).PushStream(&tsdbServicePushStreamServer{stream})
 }
 
-type TsdbService_MapStreamServer interface {
-	Send(*MapResponse) error
-	Recv() (*MapRequest, error)
+type TsdbService_PushStreamServer interface {
+	Send(*PushResponse) error
+	Recv() (*PushRequest, error)
 	grpc.ServerStream
 }
 
-type tsdbServiceMapStreamServer struct {
+type tsdbServicePushStreamServer struct {
 	grpc.ServerStream
 }
 
-func (x *tsdbServiceMapStreamServer) Send(m *MapResponse) error {
+func (x *tsdbServicePushStreamServer) Send(m *PushResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *tsdbServiceMapStreamServer) Recv() (*MapRequest, error) {
-	m := new(MapRequest)
+func (x *tsdbServicePushStreamServer) Recv() (*PushRequest, error) {
+	m := new(PushRequest)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
@@ -280,16 +220,8 @@ var TsdbService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*TsdbServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "AddSeries",
-			Handler:    _TsdbService_AddSeries_Handler,
-		},
-		{
 			MethodName: "Echo",
 			Handler:    _TsdbService_Echo_Handler,
-		},
-		{
-			MethodName: "Map",
-			Handler:    _TsdbService_Map_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
@@ -300,303 +232,8 @@ var TsdbService_ServiceDesc = grpc.ServiceDesc{
 			ClientStreams: true,
 		},
 		{
-			StreamName:    "MapStream",
-			Handler:       _TsdbService_MapStream_Handler,
-			ServerStreams: true,
-			ClientStreams: true,
-		},
-	},
-	Metadata: "server.proto",
-}
-
-// WriterServiceClient is the client API for WriterService service.
-//
-// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type WriterServiceClient interface {
-	Echo(ctx context.Context, in *EchoRequest, opts ...grpc.CallOption) (*EchoResponse, error)
-	GetSeriesReference(ctx context.Context, in *GetSeriesReferenceRequest, opts ...grpc.CallOption) (*GetSeriesReferenceResponse, error)
-	MapStream(ctx context.Context, opts ...grpc.CallOption) (WriterService_MapStreamClient, error)
-	PushStream(ctx context.Context, opts ...grpc.CallOption) (WriterService_PushStreamClient, error)
-	Push(ctx context.Context, in *PushRequest, opts ...grpc.CallOption) (*PushResponse, error)
-}
-
-type writerServiceClient struct {
-	cc grpc.ClientConnInterface
-}
-
-func NewWriterServiceClient(cc grpc.ClientConnInterface) WriterServiceClient {
-	return &writerServiceClient{cc}
-}
-
-func (c *writerServiceClient) Echo(ctx context.Context, in *EchoRequest, opts ...grpc.CallOption) (*EchoResponse, error) {
-	out := new(EchoResponse)
-	err := c.cc.Invoke(ctx, "/mach_rpc.WriterService/Echo", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *writerServiceClient) GetSeriesReference(ctx context.Context, in *GetSeriesReferenceRequest, opts ...grpc.CallOption) (*GetSeriesReferenceResponse, error) {
-	out := new(GetSeriesReferenceResponse)
-	err := c.cc.Invoke(ctx, "/mach_rpc.WriterService/GetSeriesReference", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *writerServiceClient) MapStream(ctx context.Context, opts ...grpc.CallOption) (WriterService_MapStreamClient, error) {
-	stream, err := c.cc.NewStream(ctx, &WriterService_ServiceDesc.Streams[0], "/mach_rpc.WriterService/MapStream", opts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &writerServiceMapStreamClient{stream}
-	return x, nil
-}
-
-type WriterService_MapStreamClient interface {
-	Send(*MapRequest) error
-	Recv() (*MapResponse, error)
-	grpc.ClientStream
-}
-
-type writerServiceMapStreamClient struct {
-	grpc.ClientStream
-}
-
-func (x *writerServiceMapStreamClient) Send(m *MapRequest) error {
-	return x.ClientStream.SendMsg(m)
-}
-
-func (x *writerServiceMapStreamClient) Recv() (*MapResponse, error) {
-	m := new(MapResponse)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-func (c *writerServiceClient) PushStream(ctx context.Context, opts ...grpc.CallOption) (WriterService_PushStreamClient, error) {
-	stream, err := c.cc.NewStream(ctx, &WriterService_ServiceDesc.Streams[1], "/mach_rpc.WriterService/PushStream", opts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &writerServicePushStreamClient{stream}
-	return x, nil
-}
-
-type WriterService_PushStreamClient interface {
-	Send(*PushRequest) error
-	Recv() (*PushResponse, error)
-	grpc.ClientStream
-}
-
-type writerServicePushStreamClient struct {
-	grpc.ClientStream
-}
-
-func (x *writerServicePushStreamClient) Send(m *PushRequest) error {
-	return x.ClientStream.SendMsg(m)
-}
-
-func (x *writerServicePushStreamClient) Recv() (*PushResponse, error) {
-	m := new(PushResponse)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-func (c *writerServiceClient) Push(ctx context.Context, in *PushRequest, opts ...grpc.CallOption) (*PushResponse, error) {
-	out := new(PushResponse)
-	err := c.cc.Invoke(ctx, "/mach_rpc.WriterService/Push", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-// WriterServiceServer is the server API for WriterService service.
-// All implementations must embed UnimplementedWriterServiceServer
-// for forward compatibility
-type WriterServiceServer interface {
-	Echo(context.Context, *EchoRequest) (*EchoResponse, error)
-	GetSeriesReference(context.Context, *GetSeriesReferenceRequest) (*GetSeriesReferenceResponse, error)
-	MapStream(WriterService_MapStreamServer) error
-	PushStream(WriterService_PushStreamServer) error
-	Push(context.Context, *PushRequest) (*PushResponse, error)
-	mustEmbedUnimplementedWriterServiceServer()
-}
-
-// UnimplementedWriterServiceServer must be embedded to have forward compatible implementations.
-type UnimplementedWriterServiceServer struct {
-}
-
-func (UnimplementedWriterServiceServer) Echo(context.Context, *EchoRequest) (*EchoResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Echo not implemented")
-}
-func (UnimplementedWriterServiceServer) GetSeriesReference(context.Context, *GetSeriesReferenceRequest) (*GetSeriesReferenceResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetSeriesReference not implemented")
-}
-func (UnimplementedWriterServiceServer) MapStream(WriterService_MapStreamServer) error {
-	return status.Errorf(codes.Unimplemented, "method MapStream not implemented")
-}
-func (UnimplementedWriterServiceServer) PushStream(WriterService_PushStreamServer) error {
-	return status.Errorf(codes.Unimplemented, "method PushStream not implemented")
-}
-func (UnimplementedWriterServiceServer) Push(context.Context, *PushRequest) (*PushResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Push not implemented")
-}
-func (UnimplementedWriterServiceServer) mustEmbedUnimplementedWriterServiceServer() {}
-
-// UnsafeWriterServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to WriterServiceServer will
-// result in compilation errors.
-type UnsafeWriterServiceServer interface {
-	mustEmbedUnimplementedWriterServiceServer()
-}
-
-func RegisterWriterServiceServer(s grpc.ServiceRegistrar, srv WriterServiceServer) {
-	s.RegisterService(&WriterService_ServiceDesc, srv)
-}
-
-func _WriterService_Echo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(EchoRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(WriterServiceServer).Echo(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/mach_rpc.WriterService/Echo",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WriterServiceServer).Echo(ctx, req.(*EchoRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _WriterService_GetSeriesReference_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetSeriesReferenceRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(WriterServiceServer).GetSeriesReference(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/mach_rpc.WriterService/GetSeriesReference",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WriterServiceServer).GetSeriesReference(ctx, req.(*GetSeriesReferenceRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _WriterService_MapStream_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(WriterServiceServer).MapStream(&writerServiceMapStreamServer{stream})
-}
-
-type WriterService_MapStreamServer interface {
-	Send(*MapResponse) error
-	Recv() (*MapRequest, error)
-	grpc.ServerStream
-}
-
-type writerServiceMapStreamServer struct {
-	grpc.ServerStream
-}
-
-func (x *writerServiceMapStreamServer) Send(m *MapResponse) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-func (x *writerServiceMapStreamServer) Recv() (*MapRequest, error) {
-	m := new(MapRequest)
-	if err := x.ServerStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-func _WriterService_PushStream_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(WriterServiceServer).PushStream(&writerServicePushStreamServer{stream})
-}
-
-type WriterService_PushStreamServer interface {
-	Send(*PushResponse) error
-	Recv() (*PushRequest, error)
-	grpc.ServerStream
-}
-
-type writerServicePushStreamServer struct {
-	grpc.ServerStream
-}
-
-func (x *writerServicePushStreamServer) Send(m *PushResponse) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-func (x *writerServicePushStreamServer) Recv() (*PushRequest, error) {
-	m := new(PushRequest)
-	if err := x.ServerStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-func _WriterService_Push_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PushRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(WriterServiceServer).Push(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/mach_rpc.WriterService/Push",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WriterServiceServer).Push(ctx, req.(*PushRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-// WriterService_ServiceDesc is the grpc.ServiceDesc for WriterService service.
-// It's only intended for direct use with grpc.RegisterService,
-// and not to be introspected or modified (even as a copy)
-var WriterService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "mach_rpc.WriterService",
-	HandlerType: (*WriterServiceServer)(nil),
-	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "Echo",
-			Handler:    _WriterService_Echo_Handler,
-		},
-		{
-			MethodName: "GetSeriesReference",
-			Handler:    _WriterService_GetSeriesReference_Handler,
-		},
-		{
-			MethodName: "Push",
-			Handler:    _WriterService_Push_Handler,
-		},
-	},
-	Streams: []grpc.StreamDesc{
-		{
-			StreamName:    "MapStream",
-			Handler:       _WriterService_MapStream_Handler,
-			ServerStreams: true,
-			ClientStreams: true,
-		},
-		{
 			StreamName:    "PushStream",
-			Handler:       _WriterService_PushStream_Handler,
+			Handler:       _TsdbService_PushStream_Handler,
 			ServerStreams: true,
 			ClientStreams: true,
 		},
