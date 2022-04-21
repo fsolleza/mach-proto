@@ -10,7 +10,7 @@ service TsdbService {
   //rpc Map(MapRequest) returns (MapResponse) {}
   rpc EchoStream(stream EchoRequest) returns (stream EchoResponse) {}
   rpc PushStream(stream PushRequest) returns (stream PushResponse) {}
-  //rpc MapStream(stream MapRequest) returns (stream MapResponse) {}
+  rpc Read(ReadRequest) returns (ReadResponse) {}
 }
 
 message EchoRequest {
@@ -91,8 +91,8 @@ message PushResponse {
 //  rpc Push(PushRequest) returns (PushResponse) {}
 //}
 
-message ReadSeriesRequest {
-    uint64 series_id = 1;
+message ReadRequest {
+    string regex = 1;
 }
 
 message KafkaConfig {
@@ -112,12 +112,13 @@ message QueueConfig {
     }
 }
 
-message ReadSeriesResponse {
-    QueueConfig response_queue = 1;
-    QueueConfig data_queue = 2;
-    uint64 offset = 5;
+message SeriesSnapshot {
+    map<string, string> tags = 1;
+    QueueConfig response_queue = 2;
+    QueueConfig data_queue = 3;
+    uint64 offset = 4;
 }
 
-service ReaderService {
-  rpc Read(ReadSeriesRequest) returns (ReadSeriesResponse) {}
+message ReadResponse {
+    repeated SeriesSnapshot snapshots = 1;
 }

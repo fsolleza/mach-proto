@@ -23,6 +23,7 @@ type TsdbServiceClient interface {
 	//rpc Map(MapRequest) returns (MapResponse) {}
 	EchoStream(ctx context.Context, opts ...grpc.CallOption) (TsdbService_EchoStreamClient, error)
 	PushStream(ctx context.Context, opts ...grpc.CallOption) (TsdbService_PushStreamClient, error)
+	Read(ctx context.Context, in *ReadRequest, opts ...grpc.CallOption) (*ReadResponse, error)
 }
 
 type tsdbServiceClient struct {
@@ -104,6 +105,15 @@ func (x *tsdbServicePushStreamClient) Recv() (*PushResponse, error) {
 	return m, nil
 }
 
+func (c *tsdbServiceClient) Read(ctx context.Context, in *ReadRequest, opts ...grpc.CallOption) (*ReadResponse, error) {
+	out := new(ReadResponse)
+	err := c.cc.Invoke(ctx, "/mach_rpc.TsdbService/Read", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // TsdbServiceServer is the server API for TsdbService service.
 // All implementations must embed UnimplementedTsdbServiceServer
 // for forward compatibility
@@ -113,6 +123,7 @@ type TsdbServiceServer interface {
 	//rpc Map(MapRequest) returns (MapResponse) {}
 	EchoStream(TsdbService_EchoStreamServer) error
 	PushStream(TsdbService_PushStreamServer) error
+	Read(context.Context, *ReadRequest) (*ReadResponse, error)
 	mustEmbedUnimplementedTsdbServiceServer()
 }
 
@@ -128,6 +139,9 @@ func (UnimplementedTsdbServiceServer) EchoStream(TsdbService_EchoStreamServer) e
 }
 func (UnimplementedTsdbServiceServer) PushStream(TsdbService_PushStreamServer) error {
 	return status.Errorf(codes.Unimplemented, "method PushStream not implemented")
+}
+func (UnimplementedTsdbServiceServer) Read(context.Context, *ReadRequest) (*ReadResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Read not implemented")
 }
 func (UnimplementedTsdbServiceServer) mustEmbedUnimplementedTsdbServiceServer() {}
 
@@ -212,6 +226,24 @@ func (x *tsdbServicePushStreamServer) Recv() (*PushRequest, error) {
 	return m, nil
 }
 
+func _TsdbService_Read_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReadRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TsdbServiceServer).Read(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/mach_rpc.TsdbService/Read",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TsdbServiceServer).Read(ctx, req.(*ReadRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // TsdbService_ServiceDesc is the grpc.ServiceDesc for TsdbService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -222,6 +254,10 @@ var TsdbService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Echo",
 			Handler:    _TsdbService_Echo_Handler,
+		},
+		{
+			MethodName: "Read",
+			Handler:    _TsdbService_Read_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
@@ -238,91 +274,5 @@ var TsdbService_ServiceDesc = grpc.ServiceDesc{
 			ClientStreams: true,
 		},
 	},
-	Metadata: "server.proto",
-}
-
-// ReaderServiceClient is the client API for ReaderService service.
-//
-// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type ReaderServiceClient interface {
-	Read(ctx context.Context, in *ReadSeriesRequest, opts ...grpc.CallOption) (*ReadSeriesResponse, error)
-}
-
-type readerServiceClient struct {
-	cc grpc.ClientConnInterface
-}
-
-func NewReaderServiceClient(cc grpc.ClientConnInterface) ReaderServiceClient {
-	return &readerServiceClient{cc}
-}
-
-func (c *readerServiceClient) Read(ctx context.Context, in *ReadSeriesRequest, opts ...grpc.CallOption) (*ReadSeriesResponse, error) {
-	out := new(ReadSeriesResponse)
-	err := c.cc.Invoke(ctx, "/mach_rpc.ReaderService/Read", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-// ReaderServiceServer is the server API for ReaderService service.
-// All implementations must embed UnimplementedReaderServiceServer
-// for forward compatibility
-type ReaderServiceServer interface {
-	Read(context.Context, *ReadSeriesRequest) (*ReadSeriesResponse, error)
-	mustEmbedUnimplementedReaderServiceServer()
-}
-
-// UnimplementedReaderServiceServer must be embedded to have forward compatible implementations.
-type UnimplementedReaderServiceServer struct {
-}
-
-func (UnimplementedReaderServiceServer) Read(context.Context, *ReadSeriesRequest) (*ReadSeriesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Read not implemented")
-}
-func (UnimplementedReaderServiceServer) mustEmbedUnimplementedReaderServiceServer() {}
-
-// UnsafeReaderServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to ReaderServiceServer will
-// result in compilation errors.
-type UnsafeReaderServiceServer interface {
-	mustEmbedUnimplementedReaderServiceServer()
-}
-
-func RegisterReaderServiceServer(s grpc.ServiceRegistrar, srv ReaderServiceServer) {
-	s.RegisterService(&ReaderService_ServiceDesc, srv)
-}
-
-func _ReaderService_Read_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ReadSeriesRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ReaderServiceServer).Read(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/mach_rpc.ReaderService/Read",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ReaderServiceServer).Read(ctx, req.(*ReadSeriesRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-// ReaderService_ServiceDesc is the grpc.ServiceDesc for ReaderService service.
-// It's only intended for direct use with grpc.RegisterService,
-// and not to be introspected or modified (even as a copy)
-var ReaderService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "mach_rpc.ReaderService",
-	HandlerType: (*ReaderServiceServer)(nil),
-	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "Read",
-			Handler:    _ReaderService_Read_Handler,
-		},
-	},
-	Streams:  []grpc.StreamDesc{},
 	Metadata: "server.proto",
 }
